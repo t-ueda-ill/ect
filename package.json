@@ -13,8 +13,6 @@
 		"type" : "git",
 		"url" : "git://github.com/baryshev/ect.git"
 	},
-	"dependencies" : {
-		"coffeescript" : ">= 2.0.0"
-	},
+	"dependencies" : {},
 	"engines" : { "node" : ">= 18.3.0" }
 }
