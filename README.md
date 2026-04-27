@@ -1,30 +1,33 @@
 # ECT
 
-[Performance focused](http://ectjs.com/#benchmark) JavaScript template engine with embedded CoffeeScript syntax.
+CoffeeScript 構文を埋め込める、パフォーマンス重視の JavaScript テンプレートエンジン。
 
-[Just try demo](http://ectjs.com) to check all features.
+## インストール
 
-## Installation
+```
+npm install ect
+```
 
-	npm install ect
+**外部依存パッケージはありません。** CoffeeScript コンパイラはライブラリ内にバンドル済みです。
 
-## Features
+**動作要件:** Node.js >= 18.3.0
 
-  * Excellent performance
-  * Templates caching
-  * Automatic reloading of changed templates
-  * CoffeeScript code in templates
-  * Multi-line expressions support
-  * Tag customization support
-  * Node.JS and client-side support
-  * Powerful but simple syntax
-  * Inheritance, partials, blocks
-  * Compatible with `express`
-  * Compatible with `RequireJS`
-  * Backward compatible with `eco`
-  * [Syntax highlighting for Sublime Text 2](https://github.com/TurtlePie/Sublime-ECT) by [TurtlePie](https://github.com/TurtlePie)
+## 特徴
 
-## Usage
+  * 高速なレンダリング性能
+  * テンプレートのキャッシュ
+  * テンプレート変更時の自動リロード
+  * テンプレート内で CoffeeScript コードを記述可能
+  * 複数行の式に対応
+  * タグのカスタマイズに対応
+  * Node.js およびクライアントサイドで動作
+  * 強力かつシンプルな構文
+  * テンプレートの継承・パーシャル・ブロック
+  * `express` と互換性あり
+  * `RequireJS` と互換性あり
+  * `eco` と後方互換性あり
+
+## 使い方
 
 ```js
 var ECT = require('ect');
@@ -33,7 +36,7 @@ var renderer = ECT({ root : __dirname + '/views', ext : '.ect' });
 var html = renderer.render('page', { title: 'Hello, World!' });
 ```
 
-or
+コールバック形式も使用できます。
 
 ```js
 var ECT = require('ect');
@@ -46,21 +49,21 @@ renderer.render('page', { title: 'Hello, World!' }, function (error, html) {
 });
 ```
 
-You may use JavaScript object as root.
+JavaScript オブジェクトをテンプレートのルートとして使用することもできます。
 
 ```js
 var ECT = require('ect');
 
 var renderer = ECT({ root : {
 				layout: '<html><head><title><%- @title %></title></head><body><% content %></body></html>',
-				page: '<% extend "layout" %><p>Page content</p>'
+				page: '<% extend "layout" %><p>ページコンテンツ</p>'
 				}
 			});
 
 var html = renderer.render('page', { title: 'Hello, World!' });
 ```
 
-### With express
+### Express との連携
 
 app.js
 ```js
@@ -101,21 +104,21 @@ views/layout.ect
 </html>
 ```
 
-## Syntax
+## 構文
 
-### Unescaped output
+### エスケープなしの出力
 
 ```
 <%- someVar %>
 ```
 
-### Escaped output
+### エスケープ済み出力
 
 ```
 <%= someVar %>
 ```
 
-### CoffeeScript code
+### CoffeeScript コード
 
 ```
 <% for article in @articles : %>
@@ -123,7 +126,7 @@ views/layout.ect
 <% end %>
 ```
 
-or
+条件分岐の例:
 
 ```
 <% if @user?.authenticated : %>
@@ -133,78 +136,98 @@ or
 <% end %>
 ```
 
-### Inheritance
+### テンプレートの継承
+
+子テンプレートで親テンプレートを指定します。
 
 ```
 <% extend 'layout' %>
 ```
 
-Use
-
+親テンプレートでは、子の挿入位置を次のように定義します。
 
 ```
 <% content %>
 ```
 
-in parent template to define the insertion point.
-
-### Partials
+### パーシャル
 
 ```
 <% include 'partial' %>
 ```
 
-You can redefine data context of partial
+パーシャルにデータコンテキストを渡すこともできます。
 
 ```
 <% include 'partial', { customVar: 'Hello, World!' } %>
 ```
 
-### Blocks
+### ブロック
 
 ```
 <% block 'blockName' : %>
-	<p>This is block content</p>
+	<p>ブロックの内容</p>
 <% end %>
 ```
 
-Use
-
+親テンプレートでは、ブロックの挿入位置を次のように定義します。
 
 ```
 <% content 'blockName' %>
 ```
 
-in parent template to define the insertion point.
+ブロックは複数レベルの継承に対応しており、再定義も可能です。
 
-Blocks supports more than one level of inheritance and may be redefined.
+## オプション
 
-## Options
+### レンダラー
 
-### Renderer
+  - `root` — テンプレートのルートフォルダ、または JavaScript オブジェクト
+  - `ext` — テンプレートの拡張子（デフォルト: `''`、オブジェクトルートの場合は不使用）
+  - `cache` — コンパイル済み関数のキャッシュ（デフォルト: `true`）
+  - `watch` — テンプレート変更時の自動リロード（デフォルト: `false`、デバッグ時に有用、クライアントサイドでは非対応）
+  - `open` — 開始タグ（デフォルト: `<%`）
+  - `close` — 閉じタグ（デフォルト: `%>`）
 
-  - `root` — Templates root folder or JavaScript object containing templates
-  - `ext` — Extension of templates, defaulting to `''` (not used for JavaScript objects as root)
-  - `cache` — Compiled functions are cached, defaulting to `true`
-  - `watch` — Automatic reloading of changed templates, defaulting to `false` (useful for debugging with enabled cache, not supported for client-side)
-  - `open` — Open tag, defaulting to `<%`
-  - `close` — Closing tag, defaulting to `%>`
+### コンパイラーミドルウェア
 
-### Compiler middleware
+  - `root` — ベース URL（デフォルト: `/`、クライアント側の `root` オプションと同じ値にすること）
+  - `gzip` — gzip によるテンプレート圧縮（デフォルト: `false`）
 
-  - `root` — Base url, defaulting to `/` (should be equal to `root` option on the client side)
-  - `gzip` — Compressing templates with gzip, defaulting to `false`
+## CLI ツール
 
-## Client-side support
+ECT にはテンプレートをプリコンパイルする CLI ツールが付属しています。
 
-Download and include [coffee-script.js](https://github.com/jashkenas/coffee-script/blob/master/extras/coffee-script.js) and [ect.min.js](https://github.com/baryshev/ect/tree/master/ect.min.js).
+```
+ect source [destination]
+```
+
+### オプション
+
+  - `-o`, `--open` — 開始タグ（デフォルト: `<%`）
+  - `-c`, `--close` — 閉じタグ（デフォルト: `%>`）
+  - `-h`, `--help` — ヘルプを表示
+
+### 使用例
+
+```bash
+# 標準出力にコンパイル結果を表示
+ect template.ect
+
+# ファイルに出力
+ect template.ect compiled.js
+```
+
+## クライアントサイドでの使用
+
+[coffeescript.js](https://github.com/jashkenas/coffeescript) と [ect.min.js](https://github.com/baryshev/ect/tree/master/ect.min.js) をダウンロードして読み込みます。
 
 ```html
-<script src="/path/coffee-script.js"></script>
+<script src="/path/coffeescript.js"></script>
 <script src="/path/ect.min.js"></script>
 ```
 
-Use it.
+使用例:
 
 ```js
 var renderer = ECT({ root : '/views' });
@@ -212,15 +235,15 @@ var data = { title : 'Hello, World!' };
 var html = renderer.render('template.ect', data);
 ```
 
-### With server side compiler middleware
+### サーバーサイドコンパイラーミドルウェアとの併用
 
-Download and include [ect.min.js](https://github.com/baryshev/ect/tree/master/ect.min.js). You don't need to include CoffeeScript compiler, because templates are served already compiled by server side compiler middleware.
+[ect.min.js](https://github.com/baryshev/ect/tree/master/ect.min.js) のみダウンロードして読み込みます。サーバー側のコンパイラーミドルウェアがテンプレートをコンパイル済みで配信するため、CoffeeScript コンパイラは不要です。
 
 ```html
 <script src="/path/ect.min.js"></script>
 ```
 
-Setup server side compiler middleware.
+サーバー側の設定:
 
 ```js
 var connect = require('connect');
@@ -237,7 +260,7 @@ var app = connect()
 app.listen(3000);
 ```
 
-Use it.
+クライアント側の使用例:
 
 ```js
 var renderer = ECT({ root : '/views', ext : '.ect' });
@@ -245,9 +268,9 @@ var data = { title : 'Hello, World!' };
 var html = renderer.render('template', data);
 ```
 
-Note: root folder must be on the same domain to avoid cross-domain restrictions.
+注意: クロスドメイン制約を避けるため、ルートフォルダは同一ドメイン上に配置してください。
 
-## License 
+## ライセンス
 
 (The MIT License)
 

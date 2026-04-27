@@ -1,65 +1,66 @@
 #!/usr/bin/env node
 
-var version = '0.5.6';
+var version = '0.5.9';
 var fs = require('fs');
-var optimist = require('optimist');
-var ect = require('ect');
+var { parseArgs } = require('node:util');
+var ect = require('..');
 
-var argv = optimist
-	.usage('ECT template compiler ' + version + '\n\nUsage: ect source [destination]')
-	.describe('o', 'Open tag')
-	.default('o', '<%')
-	.alias('o', 'open')
-	.describe('c', 'Closing tag')
-	.default('c', '%>')
-	.alias('c', 'close')
-	.describe('h', 'Print help (this message) and exit')
-	.alias('h', 'help')
-	.argv;
+var usage = 'ECT template compiler ' + version + '\n\nUsage: ect source [destination]\n\nOptions:\n  -o, --open   Open tag (default: <%)\n  -c, --close  Closing tag (default: %>)\n  -h, --help   Print help and exit';
 
-var renderer = ect({ open : argv.o, close : argv.c });
+var parsed;
+try {
+	parsed = parseArgs({
+		options: {
+			open: { type: 'string', short: 'o', default: '<%' },
+			close: { type: 'string', short: 'c', default: '%>' },
+			help: { type: 'boolean', short: 'h', default: false }
+		},
+		allowPositionals: true
+	});
+} catch (err) {
+	console.error(err.message);
+	console.error(usage);
+	process.exit(1);
+}
+
+var args = parsed.positionals;
+var values = parsed.values;
+
+var renderer = ect({ open: values.open, close: values.close });
 
 var compile = function (content) {
 	try {
 		var compiled = renderer.compile(content);
-		if (argv['_'][1]) {
-			fs.writeFileSync(argv['_'][1], '(' + compiled.toString() + ');');
+		if (args[1]) {
+			fs.writeFileSync(args[1], '(' + compiled.toString() + ');');
 		} else {
 			console.log('(' + compiled.toString() + ');');
 		}
 	} catch (err) {
 		console.error(err.message);
-		process.exit();
+		process.exit(1);
 	}
 };
 
 var read = function () {
-	var content = '';
-	var file;
 	var stats;
-
 	try {
-		stats = fs.statSync(argv['_'][0]);
+		stats = fs.statSync(args[0]);
 	} catch (err) {
 		console.error(err.message);
-		process.exit();
+		process.exit(1);
 	}
 	if (stats.isDirectory()) {
-		// Directory
-		// TODO Recursive traversal
+		console.error('Directory compilation is not supported');
+		process.exit(1);
 	} else {
-		// File
-		try {
-			file = fs.readFileSync(argv['_'][0]);
-			content = file.toString();
-		} catch (err) {
-		}
-		compile(content);
+		var file = fs.readFileSync(args[0]);
+		compile(file.toString());
 	}
 };
 
-if (argv.help || !argv['_'].length) {
-	optimist.showHelp();
+if (values.help || !args.length) {
+	console.log(usage);
 } else {
 	read();
 }
